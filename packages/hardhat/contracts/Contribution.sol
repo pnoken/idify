@@ -1,26 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./ExternalContract.sol";
-
 contract CooperativeContribution {
-	ExternalContract public externalContract;
+	// ExternalContract public externalContract;
 	address public owner;
 	uint public monthlyContribution;
 	uint public nextContributionDue;
 	address payable businessAddress;
-	mapping(address => uint) public memberBalances;
+	mapping(address => uint) public balances;
 	bool public openForWithdraw;
+	uint256 public deadline = block.timestamp + 48 hours;
+	uint256 public constant threshold = 1 ether;
 
+	//events
 	event ContributionMade(address indexed contributor, uint amount);
 	event BusinessFunded(uint amount);
+	event WithdrawEnabled(bool enabled);
 
-	constructor(
-		uint _monthlyContribution,
-		address payable _businessAddress,
-		address externalContractAddress
-	) {
-		externalContract = ExternalContract(externalContractAddress);
+	constructor(uint _monthlyContribution, address payable _businessAddress) {
 		owner = msg.sender;
 		monthlyContribution = _monthlyContribution;
 		businessAddress = _businessAddress;
@@ -28,13 +25,6 @@ contract CooperativeContribution {
 	}
 
 	// Modifier to check that ExternalContract is not completed
-	modifier notCompleted() {
-		require(
-			!externalContract.completed(),
-			"Contribution process already completed"
-		);
-		_;
-	}
 
 	modifier onlyOwner() {
 		require(msg.sender == owner, "Only the owner can call this function");
@@ -53,7 +43,7 @@ contract CooperativeContribution {
 			"Monthly contribution period has passed."
 		);
 
-		memberBalances[msg.sender] += msg.value;
+		balances[msg.sender] += msg.value;
 
 		emit ContributionMade(msg.sender, msg.value);
 
@@ -67,10 +57,18 @@ contract CooperativeContribution {
 
 	function withdraw() public {
 		require(openForWithdraw, "Withdraw is not yet enabled");
-		uint balance = memberBalances[msg.sender];
+		uint balance = balances[msg.sender];
 		require(balance > 0, "You have no balance to withdraw.");
-		memberBalances[msg.sender] = 0;
+		balances[msg.sender] = 0;
 		payable(msg.sender).transfer(balance);
+	}
+
+	// Add a `timeLeft()` view function that returns the time left before the deadline for the frontend
+	function timeLeft() public view returns (uint256) {
+		if (block.timestamp >= deadline) {
+			return 0;
+		}
+		return deadline - block.timestamp;
 	}
 
 	// Owner can withdraw any excess funds
