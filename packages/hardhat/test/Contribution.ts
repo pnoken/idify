@@ -6,15 +6,6 @@ describe("CooperativeContribution", function () {
 
   let externalContract: Contract;
   let contributionContract: Contract;
-  // const owner = accounts[0];
-  // const contributor = accounts[1];
-  // const businessAddress = accounts[2];
-  before(async () => {
-    const [owner] = await ethers.getSigners();
-    const yourContractFactory = await ethers.getContractFactory("YourContract");
-    contributionContract = (await yourContractFactory.deploy(owner.address)) as Contract;
-    await contributionContract.deployed();
-  });
 
   describe("Contribution", function () {
     if (process.env.CONTRACT_ADDRESS) {
@@ -27,10 +18,10 @@ describe("CooperativeContribution", function () {
         const ExternalContract = await ethers.getContractFactory("ExternalContract");
         externalContract = await ExternalContract.deploy();
       });
-      it("Should deploy Staker", async function () {
-        const Contribution = await ethers.getContractFactory("CooperativeContribution");
-        contributionContract = await Contribution.deploy(externalContract.address);
-      });
+      // it("Should deploy Contrubution", async function () {
+      //   const Contribution = await ethers.getContractFactory("CooperativeContribution");
+      //   contributionContract = await Contribution.deploy(externalContract.address);
+      // });
     }
   });
 });

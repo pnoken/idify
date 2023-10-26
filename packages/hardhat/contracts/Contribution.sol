@@ -10,6 +10,7 @@ contract CooperativeContribution {
 	uint public nextContributionDue;
 	address payable businessAddress;
 	mapping(address => uint) public memberBalances;
+	bool public openForWithdraw;
 
 	event ContributionMade(address indexed contributor, uint amount);
 	event BusinessFunded(uint amount);
@@ -24,6 +25,15 @@ contract CooperativeContribution {
 		monthlyContribution = _monthlyContribution;
 		businessAddress = _businessAddress;
 		nextContributionDue = block.timestamp + 30 days; // First contribution due in 30 days
+	}
+
+	// Modifier to check that ExternalContract is not completed
+	modifier notCompleted() {
+		require(
+			!externalContract.completed(),
+			"Contribution process already completed"
+		);
+		_;
 	}
 
 	modifier onlyOwner() {
@@ -56,6 +66,7 @@ contract CooperativeContribution {
 	}
 
 	function withdraw() public {
+		require(openForWithdraw, "Withdraw is not yet enabled");
 		uint balance = memberBalances[msg.sender];
 		require(balance > 0, "You have no balance to withdraw.");
 		memberBalances[msg.sender] = 0;
